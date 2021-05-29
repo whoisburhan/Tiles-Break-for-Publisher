@@ -5,25 +5,46 @@ EditorBuildSettings:
   m_ObjectHideFlags: 0
   serializedVersion: 2
   m_Scenes:
-  - enabled: 1
+  - enabled: 0
     path: Assets/Scenes/MainMenu.unity
     guid: 547b53cf34bf16a4095a95af7e4f3268
-  - enabled: 1
+  - enabled: 0
     path: Assets/Scenes/LVL-1.unity
     guid: 1b1b2571efe82a444a54e6bd79580f71
-  - enabled: 1
+  - enabled: 0
     path: Assets/Scenes/LVL-2.unity
     guid: c73df4cd9c9c7e44297dbacf5a48edb8
-  - enabled: 1
+  - enabled: 0
     path: Assets/Scenes/LVL-3.unity
     guid: 036b6858a39ab154e99035972c528bf5
-  - enabled: 1
+  - enabled: 0
     path: Assets/Scenes/LVL-4.unity
     guid: 99167b07eab156a41950d8019ae706ca
-  - enabled: 1
+  - enabled: 0
     path: Assets/Scenes/LVL-5.unity
     guid: 4313a2ca1acda7f4ca958a915b9cccbe
-  - enabled: 1
+  - enabled: 0
     path: Assets/Scenes/LVL-6.unity
     guid: a40e593aa3eaa7e4aaa6b700f707b638
+  - enabled: 1
+    path: Assets/2021/UtilityScene/UtilityScene.unity
+    guid: 01c313b92ede83e45b509c09b7f2942e
+  - enabled: 1
+    path: Assets/2021/StartMenu/StartMenu.unity
+    guid: 7b95b7187c2a64146b4f13f988e61ec3
+  - enabled: 1
+    path: Assets/2021/MainMenu/MainMenu_new.unity
+    guid: f846741bd22797c45bc9aba2713cc7ff
+  - enabled: 1
+    path: Assets/2021/TilesBreakNew.unity
+    guid: a0f3aedcac883134a99743c7c90ae680
+  - enabled: 1
+    path: Assets/2021/Fluffy/Fluffy.unity
+    guid: 04c0da839c1eff44c8bbf0026ecc118b
+  - enabled: 1
+    path: Assets/2021/ColorSwitch/ColorSwitch.unity
+    guid: 6c2458bbd756f144ca4514c82f719e16
+  - enabled: 1
+    path: Assets/2021/Stack2D/Stack2D.unity
+    guid: bd28ff5660eca9a479be60c52b7d7054
   m_configObjects: {}

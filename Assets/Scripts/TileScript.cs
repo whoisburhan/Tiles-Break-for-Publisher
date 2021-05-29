@@ -2,54 +2,57 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public enum Type
+namespace GS.TilesBreak
 {
-    leftAngle,normal,rightAngle
-}
-
-public class TileScript : MonoBehaviour
-{
-    private float speed = 5f;
-    private Rigidbody2D rb2d;
-    private Transform targetPos;
-    private Vector2 tarPos;
-    private void Awake()
+    public enum Type
     {
-        rb2d = GetComponent<Rigidbody2D>();
-
-        speed = Controller.instance.tileSpeed;
+        leftAngle, normal, rightAngle
     }
 
-    private void Update()
+    public class TileScript : MonoBehaviour
     {
-        if(Controller.instance.isGameOver)
+        private float speed = 5f;
+        private Rigidbody2D rb2d;
+        private Transform targetPos;
+        private Vector2 tarPos;
+        private void Awake()
         {
-            Destroy(this.gameObject);
-        }
-    }
+            rb2d = GetComponent<Rigidbody2D>();
 
-    public void Move(bool isDiagonalMoveAvailable)
-    {
-        if(!isDiagonalMoveAvailable)
-        {
-            rb2d.velocity = new Vector2(0, -speed);
+            speed = Controller.instance.tileSpeed;
         }
-        else
+
+        private void Update()
         {
-            int x = Random.Range(0, 6);
-            if(x == 5)
+            if (Controller.instance.isGameOver)
             {
-                tarPos = (GameObject.Find("SP4").transform.position - transform.position).normalized;
-                rb2d.velocity = tarPos * speed;
+                Destroy(this.gameObject);
             }
-            else if(x == 4)
+        }
+
+        public void Move(bool isDiagonalMoveAvailable)
+        {
+            if (!isDiagonalMoveAvailable)
             {
-                tarPos = (GameObject.Find("SP7").transform.position - transform.position).normalized;
-                rb2d.velocity = tarPos * speed;
+                rb2d.velocity = new Vector2(0, -speed);
             }
             else
             {
-                rb2d.velocity = new Vector2(0, -speed);
+                int x = Random.Range(0, 6);
+                if (x == 5)
+                {
+                    tarPos = (GameObject.Find("SP4").transform.position - transform.position).normalized;
+                    rb2d.velocity = tarPos * speed;
+                }
+                else if (x == 4)
+                {
+                    tarPos = (GameObject.Find("SP7").transform.position - transform.position).normalized;
+                    rb2d.velocity = tarPos * speed;
+                }
+                else
+                {
+                    rb2d.velocity = new Vector2(0, -speed);
+                }
             }
         }
     }

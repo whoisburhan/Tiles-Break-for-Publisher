@@ -3,267 +3,339 @@ using UnityEngine.UI;
 using UnityEngine.SceneManagement;
 using UnityEngine.Advertisements;
 using System;
+using GS.CommonStuff;
 
-public class Controller : MonoBehaviour
+namespace GS.TilesBreak
 {
-    [Header("Config")]
-    [SerializeField] private string gameID = "3643881";
-    [SerializeField] private bool testMode = false;
-    private string rewardedViwedPlacementId = "rewardedVideo";
-    private string regulerPlacementId = "video";
-
-
-    public int LevelNO;
-
-    public static Controller instance;
-
-    public GameObject finalScorePanel;
-    public GameObject showRewardAds;
-
-    public Text scoreText;
-    public Text finalScoreText;
-
-    public float tileSpeed = 100f;
-    public float tileSpawnerIntervalTime = 0.5f;
-    public int score = 0;
-    public int life = 3;
-
-    public bool isPlay = false;
-    public bool isGameOver = false;
-    private bool flag = true;
-    public AudioSource sound;
-    public AudioSource backgroundMusic;
-
-    public GameObject[] hitParticles;
-
-    private bool allowRwdAdsShow = true;
-
-    private void Start()
+    public class Controller : MonoBehaviour
     {
-        Time.timeScale = 1f;
-        Advertisement.Initialize(gameID, testMode);
+        [Header("Config")]
+        [SerializeField] private string gameID = "3643881";
+        [SerializeField] private bool testMode = false;
+        private string rewardedViwedPlacementId = "rewardedVideo";
+        private string regulerPlacementId = "video";
 
-        if (finalScorePanel.activeSelf)
+        public const string GAME_DATA_STORE_KEY = "HIGHSCORE_TILESBREAK";
+
+        public int LevelNO;
+
+        public static Controller instance;
+
+        [SerializeField] private Image sliderBar;
+
+        [SerializeField] private ColorPlate myColors;
+
+        public GameObject finalScorePanel;
+        public GameObject showRewardAds;
+
+        public Text scoreText;
+        public Text finalScoreText;
+        public Text finalScoreTittleText;
+
+        public float tileSpeed = 100f;
+        public float tileSpawnerIntervalTime = 0.5f;
+        public int score = 0;
+        public int life = 3;
+
+        public bool isPlay = false;
+        public bool isGameOver = false;
+        private bool flag = true;
+        public AudioSource sound;
+        public AudioSource backgroundMusic;
+
+        public GameObject[] hitParticles;
+
+        private bool allowRwdAdsShow = true;
+
+        private void OnEnable()
         {
-            finalScorePanel.SetActive(false);
+            AdsManager_Unity.OnRewardGiving += RewardSuccess;
+            AdsManager_Unity.OnRewardCancel += RewardFailed;
+            AdsManager_Unity.OnRewardError += RewardError;
         }
-        instance = this;
-        isGameOver = false;
-        flag = true;
 
-        AudioManager.Instance.BackgroundAudioFunc(0);
-    }
-
-    private void Update()
-    {
-
-        if(isGameOver && flag)
+        private void OnDisable()
         {
-            if (Advertisement.IsReady(rewardedViwedPlacementId) && allowRwdAdsShow)
+            AdsManager_Unity.OnRewardGiving -= RewardSuccess;
+            AdsManager_Unity.OnRewardCancel -= RewardFailed;
+            AdsManager_Unity.OnRewardError -= RewardError;
+        }
+
+        private void Start()
+        {
+            Time.timeScale = 1f;
+            //Advertisement.Initialize(gameID, testMode);
+
+            isPlay = true;
+
+            if (finalScorePanel.activeSelf)
             {
-                if (!showRewardAds.activeSelf)
-                {
-                    showRewardAds.SetActive(true);
-                    Time.timeScale = 0f;
-                }
-                flag = false;
+                finalScorePanel.SetActive(false);
             }
-            else
+            instance = this;
+            isGameOver = false;
+            flag = true;
+
+            if (AudioManager.Instance != null)
             {
-                
-            if (!finalScorePanel.activeSelf)
+                AudioManager.Instance.ResetAudio();
+                AudioManager.Instance.BackgroundAudioFunc(0);
+            }
+        }
+
+        private void Update()
+        {
+
+            if (isGameOver && flag)
             {
-                finalScorePanel.SetActive(true);
+                if (Advertisement.IsReady(AdsManager_Unity.REWARDED_VIDEO_PLACEMENT) && allowRwdAdsShow)
+                {
+                    if (!showRewardAds.activeSelf)
+                    {
+                        showRewardAds.SetActive(true);
+                      //  Time.timeScale = 0f;
+                    }
+
+                    FinalScoreCal();
+
+                    flag = false;
+                }
+                else
+                {
+
+                    if (!finalScorePanel.activeSelf)
+                    {
+                        finalScorePanel.SetActive(true);
+
+                        if (finalScoreText.gameObject.activeSelf)
+                        {
+                            int hs = PlayerPrefs.GetInt(GAME_DATA_STORE_KEY, 0);
+                            Debug.Log("123  hs:" + hs);
+                            Debug.Log("123 score:" + score);
+                            if (score > hs)
+                            {
+                                finalScoreTittleText.text = "HighScore";
+                                PlayerPrefs.SetInt(GAME_DATA_STORE_KEY, score);
+
+                            }
+                            else
+                            {
+                                finalScoreTittleText.text = "Score";
+                            }
+                            finalScoreText.text = score.ToString();
+                        }
+                    }
+
+                    if (scoreText.gameObject.activeSelf)
+                    {
+                        scoreText.gameObject.SetActive(false);
+                        sliderBar.transform.parent.gameObject.SetActive(false);
+                    }
+
+                    flag = false;
+                }
             }
 
             if (scoreText.gameObject.activeSelf)
             {
-                scoreText.gameObject.SetActive(false);
+                scoreText.text = score.ToString();
             }
 
-            flag = false;
-            }
-        }
-
-        if (scoreText.gameObject.activeSelf)
-        {
-            scoreText.text = "Score : " + score.ToString();
-        }
-
-        if (finalScoreText.gameObject.activeSelf)
-        {
-            PlayerPrefs.SetInt("HIGHSCORE_" + LevelNO.ToString(), (PlayerPrefs.HasKey("HIGHSCORE_" + LevelNO.ToString())) ?
-                PlayerPrefs.GetInt("HIGHSCORE_" + LevelNO.ToString()) > score ? 
-                PlayerPrefs.GetInt("HIGHSCORE_" + LevelNO.ToString()): score : score);
-            finalScoreText.text = score.ToString();
-        }
-
-        if (isPlay)
-        {
-            if (Input.touchCount > 0)
+            if (isPlay)
             {
-                Touch[] touches = Input.touches;
-                foreach (Touch touch in touches)
+                if (Input.touchCount > 0)
                 {
-                    if (touch.phase == TouchPhase.Began)
+                    Touch[] touches = Input.touches;
+                    foreach (Touch touch in touches)
                     {
-                        Vector2 worldPoint = Camera.main.ScreenToWorldPoint(touch.position);
-                        HITPOINT(worldPoint);
-                        // Debug.Log(Input.touchCount);
+                        if (touch.phase == TouchPhase.Began)
+                        {
+                            Vector2 worldPoint = Camera.main.ScreenToWorldPoint(touch.position);
+                            HITPOINT(worldPoint);
+                            // Debug.Log(Input.touchCount);
+                        }
                     }
                 }
+
+                TileSpeedUpdate();
             }
+        }
 
-            TileSpeedUpdate();
-        }
-    }
-
-    private void TileSpeedUpdate()
-    {
-        #region switch
-        /*switch(score)
+        private void TileSpeedUpdate()
         {
-            case 5:
-                tileSpeed = 6.5f;
-                tileSpawnerIntervalTime = 1.45f;
-                break;
-            case 10:
-                tileSpeed = 6.75f;
-                tileSpawnerIntervalTime = 1.4f;
-                break;
-            case 15:
-                tileSpeed = 7.0f;
-                tileSpawnerIntervalTime = 1.35f;
-                break;
-            case 20:
-                tileSpeed = 7.25f;
-                tileSpawnerIntervalTime = 1.3f;
-                break;
-            case 30:
-                tileSpeed = 7.5f;
-                tileSpawnerIntervalTime = 1.25f;
-                break;
-            case 40:
-                tileSpeed = 7.75f;
-                tileSpawnerIntervalTime = 1.20f;
-                break;
-            case 50:
-                tileSpeed = 8.0f;
-                tileSpawnerIntervalTime = 1.1f;
-                break;
-            case 60:
-                tileSpeed = 8.5f;
-                tileSpawnerIntervalTime = 1.0f;
-                break;
-            case 70:
-                tileSpeed = 9.0f;
-                tileSpawnerIntervalTime = 0.9f;
-                break;
-            case 80:
-                tileSpeed = 9.5f;
-                tileSpawnerIntervalTime = 0.85f;
-                break;
-            case 90:
-                tileSpeed = 10.0f;
-                tileSpawnerIntervalTime = 0.8f;
-                break;
-            case 100:
-                tileSpeed = 10.5f;
-                tileSpawnerIntervalTime = 0.77f;
-                break;
-            case 120:
-                tileSpeed = 11.0f;
-                tileSpawnerIntervalTime = 0.75f;
-                break;
-        }*/
-        #endregion
-
-        if (score > 560)
-        {
-            Time.timeScale = 1.7f;
-        }
-        else if (score > 420)
-        {
-            Time.timeScale = 1.6f;
-        }
-        else if(score > 350)
-        {
-            Time.timeScale = 1.5f;
-        }
-        else if(score > 280)
-        {
-            Time.timeScale = 1.4f;
-        }
-        else if (score > 210)
-        {
-            Time.timeScale = 1.3f;
-        }
-        else if (score > 140)
-        {
-            Time.timeScale = 1.2f;
-        }
-        else if (score > 70)
-        {
-            Time.timeScale = 1.1f;
-        }
-        backgroundMusic.pitch = Time.timeScale;
-    }
-
-    private void HITPOINT(Vector2 worldPoint)
-    {
-
-        RaycastHit2D hit = Physics2D.Raycast(worldPoint, Vector2.zero);
-        if (hit.collider != null)      //for avoiding uncolider object touching error
-        {
-
-            if (hit.collider.transform.tag == "Tiles")
+            #region switch
+            /*switch(score)
             {
-                AudioManager.Instance.AudioChangeFunc(0, 0, false, 3f, 0.2f);
-                
-                score += 1;
-                if(hit.transform.GetComponent<TileHealth>().tileLvl == 1)
-                {
-                    Destroy(Instantiate(hitParticles[0],hit.transform.position,Quaternion.identity), 1f);
-                }
-                else if (hit.transform.GetComponent<TileHealth>().tileLvl == 2)
-                {
-                    Destroy(Instantiate(hitParticles[1], hit.transform.position, Quaternion.identity), 1f);
-                }
-                else if (hit.transform.GetComponent<TileHealth>().tileLvl == 3)
-                {
-                    Destroy(Instantiate(hitParticles[2], hit.transform.position, Quaternion.identity), 1f);
-                }
-                hit.transform.GetComponent<TileHealth>().TileHealthUpdate();
+                case 5:
+                    tileSpeed = 6.5f;
+                    tileSpawnerIntervalTime = 1.45f;
+                    break;
+                case 10:
+                    tileSpeed = 6.75f;
+                    tileSpawnerIntervalTime = 1.4f;
+                    break;
+                case 15:
+                    tileSpeed = 7.0f;
+                    tileSpawnerIntervalTime = 1.35f;
+                    break;
+                case 20:
+                    tileSpeed = 7.25f;
+                    tileSpawnerIntervalTime = 1.3f;
+                    break;
+                case 30:
+                    tileSpeed = 7.5f;
+                    tileSpawnerIntervalTime = 1.25f;
+                    break;
+                case 40:
+                    tileSpeed = 7.75f;
+                    tileSpawnerIntervalTime = 1.20f;
+                    break;
+                case 50:
+                    tileSpeed = 8.0f;
+                    tileSpawnerIntervalTime = 1.1f;
+                    break;
+                case 60:
+                    tileSpeed = 8.5f;
+                    tileSpawnerIntervalTime = 1.0f;
+                    break;
+                case 70:
+                    tileSpeed = 9.0f;
+                    tileSpawnerIntervalTime = 0.9f;
+                    break;
+                case 80:
+                    tileSpeed = 9.5f;
+                    tileSpawnerIntervalTime = 0.85f;
+                    break;
+                case 90:
+                    tileSpeed = 10.0f;
+                    tileSpawnerIntervalTime = 0.8f;
+                    break;
+                case 100:
+                    tileSpeed = 10.5f;
+                    tileSpawnerIntervalTime = 0.77f;
+                    break;
+                case 120:
+                    tileSpeed = 11.0f;
+                    tileSpawnerIntervalTime = 0.75f;
+                    break;
+            }*/
+            #endregion
+
+            if (score > 560)
+            {
+                Time.timeScale = 1.7f;
             }
-            else if (hit.collider.transform.tag == "Bomb")
+            else if (score > 420)
             {
-                AudioManager.Instance.AudioChangeFunc(0, 1, false, 1.4f);
-                
-                //score += 1;
-                isGameOver = true;
-            }/*
+                Time.timeScale = 1.6f;
+            }
+            else if (score > 350)
+            {
+                Time.timeScale = 1.5f;
+            }
+            else if (score > 280)
+            {
+                Time.timeScale = 1.4f;
+            }
+            else if (score > 210)
+            {
+                Time.timeScale = 1.3f;
+            }
+            else if (score > 140)
+            {
+                Time.timeScale = 1.2f;
+            }
+            else if (score > 70)
+            {
+                Time.timeScale = 1.1f;
+            }
+            backgroundMusic.pitch = Time.timeScale;
+        }
+
+        private void HITPOINT(Vector2 worldPoint)
+        {
+
+            RaycastHit2D hit = Physics2D.Raycast(worldPoint, Vector2.zero);
+            if (hit.collider != null)      //for avoiding uncolider object touching error
+            {
+
+                if (hit.collider.transform.tag == "Tiles")
+                {
+                    AudioManager.Instance.AudioChangeFunc(0, 0, false, 3f);
+
+                    score += 1;
+
+                    if (score > 599) scoreText.color = myColors.colors[2];
+                    else if (score > 299) scoreText.color = myColors.colors[1];
+                    else scoreText.color = myColors.colors[0];
+
+                    Debug.Log(Mathf.Clamp((score / 1000f), 0f, 1f));
+                    sliderBar.fillAmount = Mathf.Clamp((score / 1000f), 0f, 1f);
+
+                    /* if(hit.transform.GetComponent<TileHealth>().tileLvl == 1)
+                     {
+                         Destroy(Instantiate(hitParticles[0],hit.transform.position,Quaternion.identity), 1f);
+                     }
+                     else if (hit.transform.GetComponent<TileHealth>().tileLvl == 2)
+                     {
+                         Destroy(Instantiate(hitParticles[1], hit.transform.position, Quaternion.identity), 1f);
+                     }
+                     else if (hit.transform.GetComponent<TileHealth>().tileLvl == 3)
+                     {
+                         Destroy(Instantiate(hitParticles[2], hit.transform.position, Quaternion.identity), 1f);
+                     }*/
+
+                    Destroy(Instantiate(hitParticles[0], hit.transform.position, Quaternion.identity), 1f);
+                    //hit.transform.GetComponent<TileHealth>().TileHealthUpdate();
+                    hit.transform.GetComponent<TileHealth>().SetIsDissolving();
+                }
+                else if (hit.collider.transform.tag == "Bomb")
+                {
+                    AudioManager.Instance.AudioChangeFunc(0, 1, false, 1.4f);
+
+                    //score += 1;
+                    isGameOver = true;
+                    isPlay = false;
+                }/*
              else if (hit.collider.transform.tag == "BOMB")
              {
 
              }*/
+            }
+            /* else
+             {
+                 AudioManager.Instance.AudioChangeFunc(0, 1, false, 1.4f);
+                 //score += 1;
+                 isGameOver = true;
+             }*/
+
         }
-       /* else
+
+        private void FinalScoreCal()
         {
-            AudioManager.Instance.AudioChangeFunc(0, 1, false, 1.4f);
-            //score += 1;
-            isGameOver = true;
-        }*/
-        
-    }
+            int hs = PlayerPrefs.GetInt(GAME_DATA_STORE_KEY, 0);
 
-    public void ShowRwdAds()
-    {
-        ShowRewardedRegularAd(OnRewardedAdClosed);
-        
-    }
+            if (score >= hs)
+            {
+                finalScoreTittleText.text = "HighScore";
+                PlayerPrefs.SetInt(GAME_DATA_STORE_KEY, score);
 
-    public void ShowRewardedRegularAd(Action<ShowResult> callback)
-    {
+            }
+            else
+            {
+                finalScoreTittleText.text = "Score";
+            }
+            finalScoreText.text = score.ToString();
+        }
+
+        public void ShowRwdAds()
+        {
+            // ShowRewardedRegularAd(OnRewardedAdClosed);
+            AdsManager_Unity.Instance.ShowRewardedVideo();
+        }
+
+        public void ShowRewardedRegularAd(Action<ShowResult> callback)
+        {
 #if UNITY_ADS
         if (Advertisement.IsReady(rewardedViwedPlacementId))
         {
@@ -272,68 +344,94 @@ public class Controller : MonoBehaviour
             Advertisement.Show(rewardedViwedPlacementId, so);
         }
 #endif
-    }
-
-    private void OnRewardedAdClosed(ShowResult result)
-    {
-        Debug.Log("Rewarded ad Closed");
-        switch (result)
-        {
-            case ShowResult.Finished:
-                Debug.Log("Ad Finished,reward Player");
-                Time.timeScale = 1f;
-                isGameOver = false;
-                if (!isGameOver)
-                {
-                    flag = true;
-                }
-                allowRwdAdsShow = false;
-                isPlay = true;
-                break;
-            case ShowResult.Skipped:
-                Debug.Log("Ad skipped, posa manus :(");
-                Time.timeScale = 1f;
-                if (!finalScorePanel.activeSelf)
-                {
-                    finalScorePanel.SetActive(true);
-                }
-                break;
-            case ShowResult.Failed:
-                Debug.Log("Yaaa! play oylo nani ad");
-                Time.timeScale = 1f;
-                if (!finalScorePanel.activeSelf)
-                {
-                    finalScorePanel.SetActive(true);
-                }
-                break;
         }
-    }
 
-
-    public void RewardedAdPanelCrossButton()
-    {
-        Time.timeScale = 1f;
-    }
-
-    public void Play()
-    {
-        isPlay = true;
-    }
-
-    public void NewGame()
-    {
-        /*if (Advertisement.IsReady(regulerPlacementId))
+        private void OnRewardedAdClosed(ShowResult result)
         {
-            Advertisement.Show(regulerPlacementId);
-        }*/
-        SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
-        // Ads here :)
-        /*isPlay = true;
-        score = 0;
-        isGameOver = false;
-        if (!scoreText.gameObject.activeSelf)
+            Debug.Log("Rewarded ad Closed");
+            switch (result)
+            {
+                case ShowResult.Finished:
+                    Debug.Log("Ad Finished,reward Player");
+                   // Time.timeScale = 1f;
+                    isGameOver = false;
+                    isPlay = true;
+                    if (!isGameOver)
+                    {
+                        flag = true;
+                    }
+                    allowRwdAdsShow = false;
+                    isPlay = true;
+                    break;
+                case ShowResult.Skipped:
+                    Debug.Log("Ad skipped, posa manus :(");
+                    // Time.timeScale = 1f;
+                    if (!finalScorePanel.activeSelf)
+                    {
+                        finalScorePanel.SetActive(true);
+                    }
+                    break;
+                case ShowResult.Failed:
+                    Debug.Log("Yaaa! play oylo nani ad");
+                    // Time.timeScale = 1f;
+                    if (!finalScorePanel.activeSelf)
+                    {
+                        finalScorePanel.SetActive(true);
+                    }
+                    break;
+            }
+        }
+
+
+        public void RewardedAdPanelCrossButton()
         {
-            scoreText.gameObject.SetActive(true);
-        }*/
+            //Time.timeScale = 1f;
+        }
+
+        public void Play()
+        {
+            isPlay = true;
+        }
+
+        public void NewGame()
+        {
+            SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
+        }
+
+        #region Rewarded Video Functions
+
+        public void RewardSuccess()
+        {
+            Debug.Log("Ad Finished,reward Player");
+            Time.timeScale = 1f;
+            isGameOver = false;
+            if (!isGameOver)
+            {
+                flag = true;
+            }
+            allowRwdAdsShow = false;
+            isPlay = true;
+        }
+
+        public void RewardFailed()
+        {
+            Debug.Log("Ad skipped, posa manus :(");
+            Time.timeScale = 1f;
+            if (!finalScorePanel.activeSelf)
+            {
+                finalScorePanel.SetActive(true);
+            }
+        }
+
+        public void RewardError()
+        {
+            Debug.Log("Yaaa! play oylo nani ad");
+            Time.timeScale = 1f;
+            if (!finalScorePanel.activeSelf)
+            {
+                finalScorePanel.SetActive(true);
+            }
+        }
+        #endregion
     }
 }

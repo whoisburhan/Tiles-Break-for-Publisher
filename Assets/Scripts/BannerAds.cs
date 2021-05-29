@@ -5,24 +5,36 @@ using System.Collections;
 public class BannerAds : MonoBehaviour
 {
 #if UNITY_ANDROID
-    string gameID = "3643881";
+    const string gameID = "3643881";
 #endif
 #if UNITY_IOS
-    string gameID = "3791504";
+    const string gameID = "3643880";
 #endif
 
     string placement = "bannerAds";
 
     bool testMode = false;
 
-    IEnumerator Start()
+    void Start()
     {
-        Advertisement.Initialize(gameID, testMode);
+        if(!Advertisement.isInitialized)
+            Advertisement.Initialize(gameID, testMode);
 
-        while (!Advertisement.IsReady(placement))
-            yield return null;
+        StartCoroutine(ShowBannerWhenInitialized());
+    }
+
+    IEnumerator ShowBannerWhenInitialized()
+    {
+        while (!Advertisement.isInitialized)
+        {
+            yield return new WaitForSeconds(0.5f);
+        }
         Advertisement.Banner.SetPosition(BannerPosition.BOTTOM_CENTER);
         Advertisement.Banner.Show(placement);
-
+        /*if (Advertisement.Banner.isLoaded)
+        {
+            Debug.Log("YES ITS LOADED");
+            Advertisement.Banner.Show(placement);
+        }*/
     }
 }

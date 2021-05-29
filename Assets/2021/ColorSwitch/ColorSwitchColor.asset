@@ -1,0 +1,19 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9750b85dbe074a74cb7b27baa0d0862c, type: 3}
+  m_Name: ColorSwitchColor
+  m_EditorClassIdentifier: 
+  colors:
+  - {r: 1, g: 0.09019608, b: 0.42352942, a: 1}
+  - {r: 0.12889375, g: 0.8867924, b: 0.10373794, a: 1}
+  - {r: 0.011764729, g: 0.6720134, b: 0.98039216, a: 1}
+  - {r: 0.9960785, g: 0.62352943, b: 0.09019608, a: 1}

@@ -8,6 +8,11 @@ public class TileHealth : MonoBehaviour
     public Sprite[] tileLevelSprites;
     public Color[] colors;
     public int tileLvl;
+    [SerializeField]private GameObject childShine;
+
+    private bool isDissolving = false;
+    private float dissolveAmount = 0f;
+    private float dissolveSpeed = 5f;
 
     private void Start()
     {
@@ -46,5 +51,29 @@ public class TileHealth : MonoBehaviour
             sr.sprite = tileLevelSprites[tileLvl-1];
             sr.color = colors[tileLvl - 1];
         }
+    }
+
+    public void SetIsDissolving()
+    {
+        isDissolving = true;
+        if (childShine != null)
+        {
+            childShine.GetComponent<UI_Shine>().KillTween();
+            childShine.SetActive(false);
+        }
+        if(GetComponent<Collider>() != null)
+            GetComponent<Collider>().enabled = false;
+    }
+
+    private void Update()
+    {
+        if (isDissolving)
+        {
+            dissolveAmount =Mathf.Clamp01(dissolveAmount + (Time.deltaTime * dissolveSpeed));
+            GetComponent<SpriteRenderer>().material.SetFloat("_DissolveAmount",dissolveAmount);
+        }
+
+        if (dissolveAmount >= 1)
+            Destroy(this.gameObject);
     }
 }

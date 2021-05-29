@@ -1,10 +1,16 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.UI;
 
 public class AudioManager : MonoBehaviour
 {
     public static AudioManager Instance { get; private set; }
+
+    public const string MUSIC_VOLUME_KEY = "MUSIC_VOLUME_KEY";
+    public const string SOUND_VOLUME_KEY = "SOUND_VOLUME_KEY";
+
+    [SerializeField] private GameObject SettingCanvas;
 
     [Header("Audio Sources")]
     public AudioSource backgroundAudio;
@@ -16,8 +22,15 @@ public class AudioManager : MonoBehaviour
 
     private void Awake()
     {
-        Instance = this;
+        if (Instance != null)
+            Destroy(this.gameObject);
+        else
+        {
+            Instance = this;
+            DontDestroyOnLoad(this.gameObject);
+        }
     }
+
 
     /// <summary>
     /// Set and Play Background Music
@@ -49,8 +62,7 @@ public class AudioManager : MonoBehaviour
             audioSource[_audioSource].Stop();
         }
 
-        audioSource[_audioSource].volume = _volume;
-        audioSource[_audioSource].pitch = _pitch;
+      //  audioSource[_audioSource].pitch = _pitch;
        // audioSource[_audioSource].volume = _volume;
         audioSource[_audioSource].loop = _isLoop;
         audioSource[_audioSource].clip = sounds[_audioClipIndex];
@@ -92,6 +104,48 @@ public class AudioManager : MonoBehaviour
             {
                 _audioSouce.volume -= .1f;
             }
+        }
+    }
+
+    public void ResetAudio()
+    {
+        if (backgroundAudio.isPlaying)
+        {
+            backgroundAudio.Stop();
+        }
+        
+        foreach(var _audioSource in audioSource)
+        {
+            if (_audioSource.isPlaying)
+            {
+                _audioSource.Stop();
+            }
+        }
+    }
+
+    public void SoundVolume(float volume)
+    {
+        foreach(var x in audioSource)
+        {
+            x.volume = volume;
+        }
+
+        PlayerPrefs.SetFloat(SOUND_VOLUME_KEY, volume);
+    }
+
+    public void MusicVolume(float volume)
+    {
+        backgroundAudio.volume = volume;
+
+        PlayerPrefs.SetFloat(MUSIC_VOLUME_KEY, volume);
+    }
+
+
+    public void SetOnSettingCanvas()
+    {
+        if(SettingCanvas != null && !SettingCanvas.activeSelf)
+        {
+            SettingCanvas.SetActive(true);
         }
     }
 }
